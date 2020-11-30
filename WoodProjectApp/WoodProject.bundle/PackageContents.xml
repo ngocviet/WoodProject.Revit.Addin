@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ApplicationPackage>
+  <Components Description="WoodProject">
+    <RuntimeRequirements OS="Win64"
+                         Platform="Revit"
+                         SeriesMin="R2019"
+                         SeriesMax="R2019" />
+    <ComponentEntry AppName="WoodProject"
+                    Version="1.0.0"
+                    ModuleName="./Contents/WoodProject.addin"
+                    AppDescription="Create wall, doors, gate, floors."
+                    LoadOnCommandInvocation="False"
+                    LoadOnRevitStartup="True" />
+  </Components>
+</ApplicationPackage>
