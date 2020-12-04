@@ -90,26 +90,34 @@ namespace WoodProject
             levelCollector.OfClass(typeof(Level));
             ElementId someLevelId = levelCollector.FirstElementId();
             if (someLevelId == null || someLevelId.IntegerValue < 0) throw new InvalidDataException("ElementID is invalid.");
-
+            var wallTypeId = newDoc.GetDefaultElementTypeId(ElementTypeGroup.WallType);
+            
             UnitConversionFactors unitFactor = new UnitConversionFactors("cm", "N");
 
-            List<Curve> curves = new List<Curve>();
+            List<LineInfo> LineInfos = new List<LineInfo>();
             foreach (WoodProjectItem item in jsonDeserialized)
             {
                 
                 XYZ start = new XYZ(item.Sx / unitFactor.LengthRatio, item.Sy / unitFactor.LengthRatio, 0);
                 XYZ end = new XYZ(item.Ex / unitFactor.LengthRatio, item.Ey/ unitFactor.LengthRatio, 0);
-                curves.Add(Line.CreateBound(start, end));
+                var wallHeight = !item.DefaultWallHeight.HasValue || item.DefaultWallHeight < 230 ? 230 :
+                    item.DefaultWallHeight > 244 ? 244 :
+                    item.DefaultWallHeight.Value;
+                LineInfos.Add(new LineInfo
+                {
+                    Curve = Line.CreateBound(start, end),
+                    Height = wallHeight / unitFactor.LengthRatio
+                });
             }
 
             using (Transaction wallTrans = new Transaction(newDoc, "Create some walls"))
             {
                 wallTrans.Start();
-                var height = 400 / unitFactor.LengthRatio;
+                var height = 100 / unitFactor.LengthRatio;
 
-                foreach (Curve oneCurve in curves)
+                foreach (var lineInfo in LineInfos)
                 {
-                    Wall.Create(newDoc, oneCurve, someLevelId, false);
+                    Wall.Create(newDoc, lineInfo.Curve, wallTypeId, someLevelId, lineInfo.Height, 0, false,false);
                 }
 
                 wallTrans.Commit();

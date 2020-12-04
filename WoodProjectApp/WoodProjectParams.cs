@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Autodesk.Revit.DB;
 
 namespace WoodProject
 {
@@ -59,32 +60,40 @@ namespace WoodProject
         public string AssociatedWall { get; set; }
 
         [JsonProperty(PropertyName = "Solution")]
-        public int Solution { get; set; }
+        public int? Solution { get; set; }
 
+        [JsonProperty(PropertyName = "Default_Wall_Height")]
+        public double? DefaultWallHeight { get; set; }
+        
         [JsonProperty(PropertyName = "Floor")]
         public int Floor { get; set; }
 
     }
 
+    internal class LineInfo
+    {
+        public Curve Curve { get; set; }
+        
+        public double Height { get; set; }
+    }
 
+    internal class WoodProjectParams
+    {
+        static public List<WoodProjectItem> Parse(string jsonPath)
+        {
+            try
+            {
+                if (!File.Exists(jsonPath))
+                    return new List<WoodProjectItem>();
 
-   internal class WoodProjectParams
-   {
-      static public List<WoodProjectItem> Parse(string jsonPath)
-      {
-         try
-         {
-            if (!File.Exists(jsonPath))
-               return new List<WoodProjectItem>();
-
-            string jsonContents = File.ReadAllText(jsonPath);
-            return JsonConvert.DeserializeObject<List<WoodProjectItem>>(jsonContents);
-         }
-         catch (Exception ex)
-         {
-            Console.WriteLine("Exception happens when parsing the json file: " + ex);
-            return null;
-         }
-      }
-   }
+                string jsonContents = File.ReadAllText(jsonPath);
+                return JsonConvert.DeserializeObject<List<WoodProjectItem>>(jsonContents);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Exception happens when parsing the json file: " + ex);
+                return null;
+            }
+        }
+    }
 }
