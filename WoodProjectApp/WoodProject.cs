@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-
+using System.Linq;
 using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.DB;
 using DesignAutomationFramework;
@@ -88,40 +88,114 @@ namespace WoodProject
         {
             FilteredElementCollector levelCollector = new FilteredElementCollector(newDoc);
             levelCollector.OfClass(typeof(Level));
-            ElementId someLevelId = levelCollector.FirstElementId();
-            if (someLevelId == null || someLevelId.IntegerValue < 0) throw new InvalidDataException("ElementID is invalid.");
+            var levelElements = levelCollector.ToElements();
+            if (levelElements == null || !levelElements.Any()) throw new InvalidDataException("ElementID is invalid.");
             var wallTypeId = newDoc.GetDefaultElementTypeId(ElementTypeGroup.WallType);
-            
+            if (wallTypeId == null || wallTypeId.IntegerValue < 0) throw new InvalidDataException("ElementID is invalid.");
+
             UnitConversionFactors unitFactor = new UnitConversionFactors("cm", "N");
 
-            List<LineInfo> LineInfos = new List<LineInfo>();
-            foreach (WoodProjectItem item in jsonDeserialized)
+            List<LevelInfo> levelInfos = new List<LevelInfo>();
+            double currentElevation = 0;
+            foreach (var floorItems in jsonDeserialized
+                .GroupBy(x => $"Level {x.Floor}")
+                .OrderBy(x => x.Key))
             {
-                
-                XYZ start = new XYZ(item.Sx / unitFactor.LengthRatio, item.Sy / unitFactor.LengthRatio, 0);
-                XYZ end = new XYZ(item.Ex / unitFactor.LengthRatio, item.Ey/ unitFactor.LengthRatio, 0);
-                var wallHeight = !item.DefaultWallHeight.HasValue || item.DefaultWallHeight < 230 ? 230 :
-                    item.DefaultWallHeight > 244 ? 244 :
-                    item.DefaultWallHeight.Value;
-                LineInfos.Add(new LineInfo
+                if (!floorItems.Any())
                 {
-                    Curve = Line.CreateBound(start, end),
-                    Height = wallHeight / unitFactor.LengthRatio
-                });
-            }
-
-            using (Transaction wallTrans = new Transaction(newDoc, "Create some walls"))
-            {
-                wallTrans.Start();
-                var height = 100 / unitFactor.LengthRatio;
-
-                foreach (var lineInfo in LineInfos)
+                    continue;
+                }
+                var firstFloorItem = floorItems.FirstOrDefault();
+                if (firstFloorItem == null)
                 {
-                    Wall.Create(newDoc, lineInfo.Curve, wallTypeId, someLevelId, lineInfo.Height, 0, false,false);
+                    continue;
                 }
 
-                wallTrans.Commit();
+                var wallHeight = !firstFloorItem.DefaultWallHeight.HasValue ||
+                                 firstFloorItem.DefaultWallHeight < 230 ? 230 :
+                    firstFloorItem.DefaultWallHeight > 244 ? 244 :
+                    firstFloorItem.DefaultWallHeight.Value;
+                wallHeight = wallHeight / unitFactor.LengthRatio;
+                var level = new LevelInfo
+                {
+                    Id = null,
+                    Name = floorItems.Key,
+                    Elevator = currentElevation,
+                    Height = wallHeight,
+                    Curves = new List<Curve>(),
+                };
+
+                if (levelElements.Select(x => x.Name).Contains(floorItems.Key))
+                {
+                    level.Id = levelElements.First(x => x.Name == floorItems.Key).Id;
+                }
+
+                level.Curves.AddRange(floorItems.Select(item =>
+                        Line.CreateBound(
+                            new XYZ(item.Sx / unitFactor.LengthRatio, item.Sy / unitFactor.LengthRatio, 0),
+                            new XYZ(item.Ex / unitFactor.LengthRatio, item.Ey / unitFactor.LengthRatio, 0))
+                    )
+                );
+                levelInfos.Add(level);
+                currentElevation += wallHeight;
+            }
+
+            using (Transaction constructTrans = new Transaction(newDoc, "Create construct"))
+            {
+                constructTrans.Start();
+                foreach (var levelInfo in levelInfos)
+                {
+                    var level = CreateLevel(newDoc, levelElements, levelInfo.Elevator, levelInfo);
+                    if (level != null)
+                    {
+                        //CreateFloor(newDoc, level, levelInfo.Curves);
+                        foreach (var curve in levelInfo.Curves)
+                        {
+                            Wall.Create(newDoc, curve, wallTypeId, level.Id, levelInfo.Height, 0, false, false);
+                        }
+                    }
+                }
+
+                constructTrans.Commit();
             }
         }
+        private static Level CreateLevel(Document document, IList<Element> levelElements, double elevation,
+            LevelInfo levelInfo)
+        {
+            if (levelInfo.Id != null &&
+                levelElements.FirstOrDefault(x => x.Id == levelInfo.Id) is Level levelElement) // existed level
+            {
+                levelElement.Elevation = elevation;
+                return levelElement;
+            }
+            
+            // Begin to create a level
+            Level level = Level.Create(document, elevation);
+            if (null == level)
+            {
+                throw new Exception("Create a new level failed.");
+            }
+
+            return level;
+        }
+
+        //private static Floor CreateFloor(Document document, Level level, List<Curve> curves)
+        //{
+        //    // Get a floor type for floor creation
+        //    FilteredElementCollector collector = new FilteredElementCollector(document);
+        //    collector.OfClass(typeof(FloorType));
+        //    FloorType floorType = collector.FirstElement() as FloorType;
+
+        //    CurveArray profile = new CurveArray();
+        //    foreach (var curve in curves)
+        //    {
+        //        profile.Append(curve);
+        //    }
+
+        //    // The normal vector (0,0,1) that must be perpendicular to the profile.
+        //    XYZ normal = XYZ.BasisZ;
+
+        //    return document.Create.NewFloor(profile, floorType, level, true, normal);
+        //}
     }
 }

@@ -70,11 +70,17 @@ namespace WoodProject
 
     }
 
-    internal class LineInfo
+    internal class LevelInfo
     {
-        public Curve Curve { get; set; }
-        
+        public ElementId Id { get; set; }
+
+        public string Name { get; set; }
+
+        public List<Curve> Curves { get; set; }
+
         public double Height { get; set; }
+
+        public double Elevator { get; set; }
     }
 
     internal class WoodProjectParams
