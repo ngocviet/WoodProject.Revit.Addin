@@ -111,10 +111,10 @@ namespace WoodProject
                     continue;
                 }
 
-                var wallHeight = !firstFloorItem.DefaultWallHeight.HasValue ||
-                                 firstFloorItem.DefaultWallHeight < 230 ? 230 :
-                    firstFloorItem.DefaultWallHeight > 244 ? 244 :
-                    firstFloorItem.DefaultWallHeight.Value;
+                var wallHeight = !firstFloorItem.Height.HasValue ||
+                                 firstFloorItem.Height < 230 ? 230 :
+                    firstFloorItem.Height > 244 ? 244 :
+                    firstFloorItem.Height.Value;
                 wallHeight = wallHeight / unitFactor.LengthRatio;
                 var level = new LevelInfo
                 {

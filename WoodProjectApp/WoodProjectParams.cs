@@ -62,8 +62,8 @@ namespace WoodProject
         [JsonProperty(PropertyName = "Solution")]
         public int? Solution { get; set; }
 
-        [JsonProperty(PropertyName = "Default_Wall_Height")]
-        public double? DefaultWallHeight { get; set; }
+        [JsonProperty(PropertyName = "Height")]
+        public double? Height { get; set; }
         
         [JsonProperty(PropertyName = "Floor")]
         public int Floor { get; set; }
