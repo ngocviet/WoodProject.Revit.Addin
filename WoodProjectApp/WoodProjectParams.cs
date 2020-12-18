@@ -60,7 +60,7 @@ namespace WoodProject
         public string AssociatedWall { get; set; }
 
         [JsonProperty(PropertyName = "Solution")]
-        public int? Solution { get; set; }
+        public string Solution { get; set; }
 
         [JsonProperty(PropertyName = "Height")]
         public double? Height { get; set; }
