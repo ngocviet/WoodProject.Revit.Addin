@@ -70,7 +70,7 @@ namespace WoodProject
             // SetUnits(doc);
 
             string filepathJson = "WoodProjectInput.json";
-            List<WoodProjectItem> jsonDeserialized = WoodProjectParams.Parse(filepathJson);
+            WoodProjectItem jsonDeserialized = WoodProjectParams.Parse(filepathJson);
 
             CreateWalls(jsonDeserialized, doc);
 
@@ -84,11 +84,14 @@ namespace WoodProject
 
 
 
-        private static void CreateWalls(List<WoodProjectItem> jsonDeserialized, Document newDoc)
+        private static void CreateWalls(WoodProjectItem jsonDeserialized, Document newDoc)
         {
             FilteredElementCollector levelCollector = new FilteredElementCollector(newDoc);
             levelCollector.OfClass(typeof(Level));
             var levelElements = levelCollector.ToElements();
+            FilteredElementCollector levelCollector1 = new FilteredElementCollector(newDoc);
+            levelCollector1.OfClass(typeof(Wall));
+            var walls = levelCollector1.ToElements();
             if (levelElements == null || !levelElements.Any()) throw new InvalidDataException("ElementID is invalid.");
             var wallTypeId = newDoc.GetDefaultElementTypeId(ElementTypeGroup.WallType);
             if (wallTypeId == null || wallTypeId.IntegerValue < 0) throw new InvalidDataException("ElementID is invalid.");
@@ -97,7 +100,7 @@ namespace WoodProject
 
             List<LevelInfo> levelInfos = new List<LevelInfo>();
             double currentElevation = 0;
-            foreach (var floorItems in jsonDeserialized
+            foreach (var floorItems in jsonDeserialized.Solutions
                 .GroupBy(x => $"Level {x.Floor}")
                 .OrderBy(x => x.Key))
             {
@@ -148,7 +151,7 @@ namespace WoodProject
                     var level = CreateLevel(newDoc, levelElements, levelInfo.Elevator, levelInfo);
                     if (level != null)
                     {
-                        //CreateFloor(newDoc, level, levelInfo.Curves);
+                        CreateFloor(newDoc, level, jsonDeserialized.Areas[0], unitFactor);
                         foreach (var curve in levelInfo.Curves)
                         {
                             Wall.Create(newDoc, curve, wallTypeId, level.Id, levelInfo.Height, 0, false, false);
@@ -171,6 +174,7 @@ namespace WoodProject
             
             // Begin to create a level
             Level level = Level.Create(document, elevation);
+            
             if (null == level)
             {
                 throw new Exception("Create a new level failed.");
@@ -179,23 +183,30 @@ namespace WoodProject
             return level;
         }
 
-        //private static Floor CreateFloor(Document document, Level level, List<Curve> curves)
-        //{
-        //    // Get a floor type for floor creation
-        //    FilteredElementCollector collector = new FilteredElementCollector(document);
-        //    collector.OfClass(typeof(FloorType));
-        //    FloorType floorType = collector.FirstElement() as FloorType;
+        private static Floor CreateFloor(Document document, Level level, Area area, UnitConversionFactors unitFactor)
+        {
+            // Get a floor type for floor creation
+            FilteredElementCollector collector = new FilteredElementCollector(document);
+            collector.OfClass(typeof(FloorType));
+            FloorType floorType = collector.FirstElement() as FloorType;
 
-        //    CurveArray profile = new CurveArray();
-        //    foreach (var curve in curves)
-        //    {
-        //        profile.Append(curve);
-        //    }
+            CurveArray profile = new CurveArray();
+            profile.Append(Line.CreateBound(
+                new XYZ(area.Xmax / unitFactor.LengthRatio, area.Ymax / unitFactor.LengthRatio, 0),
+                new XYZ(area.Xmax / unitFactor.LengthRatio, area.Ymin / unitFactor.LengthRatio, 0)));
+            profile.Append(Line.CreateBound(
+                new XYZ(area.Xmax / unitFactor.LengthRatio, area.Ymin / unitFactor.LengthRatio, 0),
+                new XYZ(area.Xmin / unitFactor.LengthRatio, area.Ymin / unitFactor.LengthRatio, 0)));
+            profile.Append(Line.CreateBound(
+                new XYZ(area.Xmin / unitFactor.LengthRatio, area.Ymin / unitFactor.LengthRatio, 0),
+                new XYZ(area.Xmin / unitFactor.LengthRatio, area.Ymax / unitFactor.LengthRatio, 0)));
+            profile.Append(Line.CreateBound(
+                new XYZ(area.Xmin / unitFactor.LengthRatio, area.Ymax / unitFactor.LengthRatio, 0),
+                new XYZ(area.Xmax / unitFactor.LengthRatio, area.Ymax / unitFactor.LengthRatio, 0)));
 
-        //    // The normal vector (0,0,1) that must be perpendicular to the profile.
-        //    XYZ normal = XYZ.BasisZ;
-
-        //    return document.Create.NewFloor(profile, floorType, level, true, normal);
-        //}
+            // The normal vector (0,0,1) that must be perpendicular to the profile.
+            XYZ normal = XYZ.BasisZ;
+            return document.Create.NewFloor(profile, floorType, level, false, normal);
+        }
     }
 }
