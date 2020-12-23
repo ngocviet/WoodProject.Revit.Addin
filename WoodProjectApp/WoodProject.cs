@@ -146,12 +146,14 @@ namespace WoodProject
             using (Transaction constructTrans = new Transaction(newDoc, "Create construct"))
             {
                 constructTrans.Start();
+                double floorHeight = 0;
                 foreach (var levelInfo in levelInfos)
                 {
                     var level = CreateLevel(newDoc, levelElements, levelInfo.Elevator, levelInfo);
                     if (level != null)
                     {
-                        CreateFloor(newDoc, level, jsonDeserialized.Areas[0], unitFactor);
+                        CreateFloor(newDoc, level, jsonDeserialized.Areas[0], unitFactor, -floorHeight);
+                        floorHeight += levelInfo.Height;
                         foreach (var curve in levelInfo.Curves)
                         {
                             Wall.Create(newDoc, curve, wallTypeId, level.Id, levelInfo.Height, 0, false, false);
@@ -183,7 +185,7 @@ namespace WoodProject
             return level;
         }
 
-        private static Floor CreateFloor(Document document, Level level, Area area, UnitConversionFactors unitFactor)
+        private static Floor CreateFloor(Document document, Level level, Area area, UnitConversionFactors unitFactor, double z)
         {
             // Get a floor type for floor creation
             FilteredElementCollector collector = new FilteredElementCollector(document);
@@ -192,17 +194,17 @@ namespace WoodProject
 
             CurveArray profile = new CurveArray();
             profile.Append(Line.CreateBound(
-                new XYZ(area.Xmax / unitFactor.LengthRatio, area.Ymax / unitFactor.LengthRatio, 0),
-                new XYZ(area.Xmax / unitFactor.LengthRatio, area.Ymin / unitFactor.LengthRatio, 0)));
-            profile.Append(Line.CreateBound(
-                new XYZ(area.Xmax / unitFactor.LengthRatio, area.Ymin / unitFactor.LengthRatio, 0),
-                new XYZ(area.Xmin / unitFactor.LengthRatio, area.Ymin / unitFactor.LengthRatio, 0)));
-            profile.Append(Line.CreateBound(
-                new XYZ(area.Xmin / unitFactor.LengthRatio, area.Ymin / unitFactor.LengthRatio, 0),
-                new XYZ(area.Xmin / unitFactor.LengthRatio, area.Ymax / unitFactor.LengthRatio, 0)));
-            profile.Append(Line.CreateBound(
-                new XYZ(area.Xmin / unitFactor.LengthRatio, area.Ymax / unitFactor.LengthRatio, 0),
-                new XYZ(area.Xmax / unitFactor.LengthRatio, area.Ymax / unitFactor.LengthRatio, 0)));
+                new XYZ(area.Xmax / unitFactor.LengthRatio, area.Ymax / unitFactor.LengthRatio, z),
+                new XYZ(area.Xmax / unitFactor.LengthRatio, area.Ymin / unitFactor.LengthRatio, z)));
+            profile.Append(Line.CreateBound(                                                    
+                new XYZ(area.Xmax / unitFactor.LengthRatio, area.Ymin / unitFactor.LengthRatio, z),
+                new XYZ(area.Xmin / unitFactor.LengthRatio, area.Ymin / unitFactor.LengthRatio, z)));
+            profile.Append(Line.CreateBound(                                                    
+                new XYZ(area.Xmin / unitFactor.LengthRatio, area.Ymin / unitFactor.LengthRatio, z),
+                new XYZ(area.Xmin / unitFactor.LengthRatio, area.Ymax / unitFactor.LengthRatio, z)));
+            profile.Append(Line.CreateBound(                                                    
+                new XYZ(area.Xmin / unitFactor.LengthRatio, area.Ymax / unitFactor.LengthRatio, z),
+                new XYZ(area.Xmax / unitFactor.LengthRatio, area.Ymax / unitFactor.LengthRatio, z)));
 
             // The normal vector (0,0,1) that must be perpendicular to the profile.
             XYZ normal = XYZ.BasisZ;
