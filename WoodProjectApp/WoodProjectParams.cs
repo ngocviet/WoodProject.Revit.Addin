@@ -107,6 +107,7 @@ namespace WoodProject
                 if (!File.Exists(jsonPath))
                     return new WoodProjectItem ();
 
+                System.Console.WriteLine(jsonPath);
                 string jsonContents = File.ReadAllText(jsonPath);
                 return JsonConvert.DeserializeObject<WoodProjectItem>(jsonContents);
             }
