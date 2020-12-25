@@ -85,13 +85,20 @@ namespace WoodProject
         public double Ymin { get; set; }
     }
 
+    internal class WallInfo
+    {
+        public Curve Curve { get; set; }
+
+        public ElementId TypeId { get; set; }
+    }
+
     internal class LevelInfo
     {
         public ElementId Id { get; set; }
 
         public string Name { get; set; }
 
-        public List<Curve> Curves { get; set; }
+        public List<WallInfo> WallInfos { get; set; }
 
         public double Height { get; set; }
 

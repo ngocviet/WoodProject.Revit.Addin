@@ -89,12 +89,27 @@ namespace WoodProject
             FilteredElementCollector levelCollector = new FilteredElementCollector(newDoc);
             levelCollector.OfClass(typeof(Level));
             var levelElements = levelCollector.ToElements();
-            FilteredElementCollector levelCollector1 = new FilteredElementCollector(newDoc);
-            levelCollector1.OfClass(typeof(Wall));
-            var walls = levelCollector1.ToElements();
             if (levelElements == null || !levelElements.Any()) throw new InvalidDataException("ElementID is invalid.");
-            var wallTypeId = newDoc.GetDefaultElementTypeId(ElementTypeGroup.WallType);
-            if (wallTypeId == null || wallTypeId.IntegerValue < 0) throw new InvalidDataException("ElementID is invalid.");
+
+            FilteredElementCollector wallCollector = new FilteredElementCollector(newDoc);
+            wallCollector.OfClass(typeof(Wall));
+
+            FilteredElementCollector a = new FilteredElementCollector(newDoc);
+            a.OfClass(typeof(Family));
+            var b = a.ToElements();
+            var c = b.Select(x => x.Name).ToList();
+            var f = new List<string>();
+            foreach (var i in b)
+            {
+                f.Add((i as Family).FamilyCategory.Name);
+            }
+            var d = (b.First() as Family).GetFamilySymbolIds();
+            FamilySymbol familySymbol = (b.First() as Family).Document.GetElement(d.First()) as FamilySymbol;
+            var wallElements = wallCollector.ToElements();
+            if (wallElements == null || !wallElements.Any()) throw new InvalidDataException("ElementID is invalid.");
+
+            var defaultWallTypeId = newDoc.GetDefaultElementTypeId(ElementTypeGroup.WallType);
+            if (defaultWallTypeId == null || defaultWallTypeId.IntegerValue < 0) throw new InvalidDataException("ElementID is invalid.");
 
             UnitConversionFactors unitFactor = new UnitConversionFactors("cm", "N");
 
@@ -125,7 +140,7 @@ namespace WoodProject
                     Name = floorItems.Key,
                     Elevator = currentElevation,
                     Height = wallHeight,
-                    Curves = new List<Curve>(),
+                    WallInfos = new List<WallInfo>(),
                 };
 
                 if (levelElements.Select(x => x.Name).Contains(floorItems.Key))
@@ -133,10 +148,13 @@ namespace WoodProject
                     level.Id = levelElements.First(x => x.Name == floorItems.Key).Id;
                 }
 
-                level.Curves.AddRange(floorItems.Select(item =>
-                        Line.CreateBound(
-                            new XYZ(item.Sx / unitFactor.LengthRatio, item.Sy / unitFactor.LengthRatio, 0),
-                            new XYZ(item.Ex / unitFactor.LengthRatio, item.Ey / unitFactor.LengthRatio, 0))
+                level.WallInfos.AddRange(floorItems.Select(item => new WallInfo
+                        {
+                            Curve = Line.CreateBound(
+                                new XYZ(item.Sx / unitFactor.LengthRatio, item.Sy / unitFactor.LengthRatio, 0),
+                                new XYZ(item.Ex / unitFactor.LengthRatio, item.Ey / unitFactor.LengthRatio, 0)),
+                            TypeId = wallElements.FirstOrDefault(x => x.Name == item.SolutionName)?.GetTypeId()
+                        }
                     )
                 );
                 levelInfos.Add(level);
@@ -152,11 +170,11 @@ namespace WoodProject
                     var level = CreateLevel(newDoc, levelElements, levelInfo.Elevator, levelInfo);
                     if (level != null)
                     {
-                        CreateFloor(newDoc, level, jsonDeserialized.Areas[0], unitFactor, -floorHeight);
+                        CreateFloor(newDoc, level, jsonDeserialized.Areas[0], unitFactor, floorHeight);
                         floorHeight += levelInfo.Height;
-                        foreach (var curve in levelInfo.Curves)
+                        foreach (var wallInfo in levelInfo.WallInfos)
                         {
-                            Wall.Create(newDoc, curve, wallTypeId, level.Id, levelInfo.Height, 0, false, false);
+                            Wall.Create(newDoc, wallInfo.Curve, wallInfo.TypeId ?? defaultWallTypeId, level.Id, levelInfo.Height, 0, false, false);
                         }
                     }
                 }
