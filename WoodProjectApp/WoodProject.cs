@@ -91,25 +91,14 @@ namespace WoodProject
             var levelElements = levelCollector.ToElements();
             if (levelElements == null || !levelElements.Any()) throw new InvalidDataException("ElementID is invalid.");
 
-            FilteredElementCollector wallCollector = new FilteredElementCollector(newDoc);
-            wallCollector.OfClass(typeof(Wall));
-
-            FilteredElementCollector a = new FilteredElementCollector(newDoc);
-            a.OfClass(typeof(Family));
-            var b = a.ToElements();
-            var c = b.Select(x => x.Name).ToList();
-            var f = new List<string>();
-            foreach (var i in b)
-            {
-                f.Add((i as Family).FamilyCategory.Name);
-            }
-            var d = (b.First() as Family).GetFamilySymbolIds();
-            FamilySymbol familySymbol = (b.First() as Family).Document.GetElement(d.First()) as FamilySymbol;
-            var wallElements = wallCollector.ToElements();
-            if (wallElements == null || !wallElements.Any()) throw new InvalidDataException("ElementID is invalid.");
-
             var defaultWallTypeId = newDoc.GetDefaultElementTypeId(ElementTypeGroup.WallType);
             if (defaultWallTypeId == null || defaultWallTypeId.IntegerValue < 0) throw new InvalidDataException("ElementID is invalid.");
+            
+            // Find any NP elements in the view
+            FilteredElementCollector wallTypeCollector = new FilteredElementCollector(newDoc);
+                
+            wallTypeCollector.OfClass(typeof(WallType));
+            var wallTypes = wallTypeCollector.ToElements();
 
             UnitConversionFactors unitFactor = new UnitConversionFactors("cm", "N");
 
@@ -153,7 +142,7 @@ namespace WoodProject
                             Curve = Line.CreateBound(
                                 new XYZ(item.Sx / unitFactor.LengthRatio, item.Sy / unitFactor.LengthRatio, 0),
                                 new XYZ(item.Ex / unitFactor.LengthRatio, item.Ey / unitFactor.LengthRatio, 0)),
-                            TypeId = wallElements.FirstOrDefault(x => x.Name == item.SolutionName)?.GetTypeId()
+                            TypeId = wallTypes.FirstOrDefault(x => x.Name == item.SolutionName)?.Id,
                         }
                     )
                 );
