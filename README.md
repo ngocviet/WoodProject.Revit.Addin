@@ -40,6 +40,17 @@ Build `WoodProject.sln` in `Release` or `Debug` configuration.
 
 `WoodProjectActivity` expects an input file `WoodProjectInput.json` and the template file specified in debug. The contents of the embedded JSON are stored in a file named `WoodProjectInput.json`, as specified by the `parameters` of `inputJson` in the activity `WoodProjectActivity`. The WoodProject application reads this file from current working folder, parses the JSON and creates walls and floors from the extracted specifications in a new created Revit file `woodproject_result.rvt`, which will be uploaded to `url` you provide in the workitem.
 
+## Deploy WoodProject
+
+Use Postman collection "Design Automation For Revit Tutorial"
+
+Run Task2 - Get an Access Token
+
+Run Task4 - Update an Existing AppBundle
+
+Run Task 4 - Upload the Updated AppBundle (change the file parameter in body to select correct file)
+
+Run Task 4 - Assign an Existing Alias to the Updated AppBundle
 
 
 # Further Reading
