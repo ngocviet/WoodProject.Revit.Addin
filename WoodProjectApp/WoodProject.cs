@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Structure;
 using DesignAutomationFramework;
 
 namespace WoodProject
@@ -137,15 +138,34 @@ namespace WoodProject
                     level.Id = levelElements.First(x => x.Name == floorItems.Key).Id;
                 }
 
-                level.WallInfos.AddRange(floorItems.Select(item => new WallInfo
+                level.WallInfos.AddRange(floorItems
+                    .Where(item => !string.IsNullOrWhiteSpace(item.SolutionName))
+                    .Select(item => new WallInfo
                         {
                             Curve = Line.CreateBound(
                                 new XYZ(item.Sx / unitFactor.LengthRatio, item.Sy / unitFactor.LengthRatio, 0),
                                 new XYZ(item.Ex / unitFactor.LengthRatio, item.Ey / unitFactor.LengthRatio, 0)),
                             TypeId = wallTypes.FirstOrDefault(x => x.Name == item.SolutionName)?.Id,
+                            WallSymbols = floorItems.Where(x =>
+                                !string.IsNullOrWhiteSpace(x.AssociatedWall) && x.AssociatedWall == item.Id).Select(
+                                symbol =>
+                                    new Symbol
+                                    {
+                                        StartPoint = new XYZ(symbol.Sx / unitFactor.LengthRatio,
+                                            symbol.Sy / unitFactor.LengthRatio,
+                                            symbol.Type == "window"
+                                                ? currentElevation + wallHeight / 3
+                                                : currentElevation),
+                                        Type = symbol.Type
+
+                                    }).ToList()
                         }
                     )
                 );
+
+
+
+
                 levelInfos.Add(level);
                 currentElevation += wallHeight;
             }
@@ -163,7 +183,14 @@ namespace WoodProject
                         floorHeight += levelInfo.Height;
                         foreach (var wallInfo in levelInfo.WallInfos)
                         {
-                            Wall.Create(newDoc, wallInfo.Curve, wallInfo.TypeId ?? defaultWallTypeId, level.Id, levelInfo.Height, 0, false, false);
+                            var wall = Wall.Create(newDoc, wallInfo.Curve, wallInfo.TypeId ?? defaultWallTypeId, level.Id, levelInfo.Height, 0, false, false);
+                            if (wallInfo.WallSymbols.Any())
+                            {
+                                foreach (var wallSymbol in wallInfo.WallSymbols)
+                                {
+                                    InsertSymBol(newDoc, wallSymbol.StartPoint, wall, level, wallSymbol.Type);
+                                }
+                            }
                         }
                     }
                 }
@@ -216,6 +243,28 @@ namespace WoodProject
             // The normal vector (0,0,1) that must be perpendicular to the profile.
             XYZ normal = XYZ.BasisZ;
             return document.Create.NewFloor(profile, floorType, level, false, normal);
+        }
+
+
+        public static void InsertSymBol(Document doc, XYZ location, Wall wall, Level level, string wallSymbolType)
+        {
+            var buildCategory = wallSymbolType.ToLower() == "window" ? BuiltInCategory.OST_Windows :
+                wallSymbolType.ToLower() == "door" || wallSymbolType.ToLower() == "gate" ? BuiltInCategory.OST_Doors : BuiltInCategory.INVALID;
+            
+            FilteredElementCollector winCollector = new FilteredElementCollector(doc);
+            IList<Element> windowTypes = winCollector.OfCategory(buildCategory).WhereElementIsElementType().ToElements();
+            FamilySymbol winType = windowTypes.First() as FamilySymbol;
+            if (winType != null)
+            {
+                if (!winType.IsActive)
+                {
+                    // Ensure the family symbol is activated.
+                    winType.Activate();
+                    doc.Regenerate();
+                }
+                
+                doc.Create.NewFamilyInstance(location, winType, wall, level, StructuralType.NonStructural);
+            }
         }
     }
 }

@@ -90,6 +90,15 @@ namespace WoodProject
         public Curve Curve { get; set; }
 
         public ElementId TypeId { get; set; }
+
+        public List<Symbol> WallSymbols { get; set; }
+    }
+    
+    internal class Symbol
+    {
+        public string Type { get; set; }
+
+        public XYZ StartPoint { get; set; }
     }
 
     internal class LevelInfo
