@@ -73,6 +73,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Constants.cs" />
     <Compile Include="UnitConversion.cs" />
     <Compile Include="WoodProject.cs" />
     <Compile Include="WoodProjectParams.cs" />

@@ -32,6 +32,15 @@ namespace WoodProject
         public List<Area> Areas { get; set; }
     }
 
+    internal class RawWoodProjectItem
+    {
+        [JsonProperty(PropertyName = "solution")]
+        public List<Dictionary<string, string>> Solutions { get; set; }
+
+        [JsonProperty(PropertyName = "losa")]
+        public List<Dictionary<string, string>> Areas { get; set; }
+    }
+
     internal class Solution
     {
         [JsonProperty(PropertyName = "Id")] public string Id { get; set; }
@@ -64,7 +73,83 @@ namespace WoodProject
         [JsonProperty(PropertyName = "Height")]
         public double? Height { get; set; }
 
-        [JsonProperty(PropertyName = "Floor")] public int Floor { get; set; }
+        [JsonProperty(PropertyName = "Floor")]
+        public int Floor { get; set; }
+
+        [JsonProperty(PropertyName = "Id Panel")]
+        public int? IdPanel { get; set; }
+        
+        [JsonProperty(PropertyName = "Peso por unidad de largo")]
+        public float? PesoUnidad { get; set; }
+
+        [JsonProperty(PropertyName = "Longitud Panel")]
+        public int? Longitud { get; set; }
+
+        [JsonProperty(PropertyName = "Id Mesa")]
+        public int? IdMesa { get; set; }
+
+        [JsonProperty(PropertyName = "Altura panel")]
+        public int? Altura { get; set; }
+
+        [JsonProperty(PropertyName = "Tipo Anclaje 1")]
+        public string TipoAnclaje1 { get; set; }
+
+        [JsonProperty(PropertyName = "Tipo Anclaje 2")]
+        public string TipoAnclaje2 { get; set; }
+
+        [JsonProperty(PropertyName = "Tipo Anclaje 3")]
+        public string TipoAnclaje3 { get; set; }
+
+        [JsonProperty(PropertyName = "Tipo Anclaje 4")]
+        public string TipoAnclaje4 { get; set; }
+
+        [JsonProperty(PropertyName = "Tipo Anclaje 5")]
+        public string TipoAnclaje5 { get; set; }
+
+        [JsonProperty(PropertyName = "Posicion Anclaje 1")]
+        public string Posicion1 { get; set; }
+
+        [JsonProperty(PropertyName = "Posicion Anclaje 2")]
+        public string Posicion2 { get; set; }
+
+        [JsonProperty(PropertyName = "Posicion Anclaje 3")]
+        public string Posicion3 { get; set; }
+
+        [JsonProperty(PropertyName = "Posicion Anclaje 4")]
+        public string Posicion4 { get; set; }
+
+        [JsonProperty(PropertyName = "Posicion Anclaje 5")]
+        public string Posicion5 { get; set; }
+
+        [JsonProperty(PropertyName = "qPPDD borde 1")]
+        public string Borde1 { get; set; }
+
+        [JsonProperty(PropertyName = "qPPDD borde 2")]
+        public string Borde2 { get; set; }
+
+        [JsonProperty(PropertyName = "qPPDD borde 3")]
+        public string Borde3 { get; set; }
+
+        [JsonProperty(PropertyName = "qPPDD borde 4")]
+        public string Borde4 { get; set; }
+
+        [JsonProperty(PropertyName = "qPPDD borde 5")]
+        public string Borde5 { get; set; }
+
+        [JsonProperty(PropertyName = "Clavado Perimetral Lateral")]
+        public int? ClavadoPerimetralLateral { get; set; }
+
+        [JsonProperty(PropertyName = "Clavado Interior Lateral")]
+        public int? ClavadoInteriorLateral { get; set; }
+
+        [JsonProperty(PropertyName = "Clavado Perimetral Gravitacional")]
+        public int? ClavadoPerimetralGravitacional { get; set; }
+
+        [JsonProperty(PropertyName = "Clavado Interior Gravitacional")]
+        public int? ClavadoInteriorGravitacional { get; set; }
+
+        [JsonProperty(PropertyName = "Grado Estructural")]
+        public string GradoEstructural { get; set; }
     }
 
     internal class Area
@@ -88,6 +173,8 @@ namespace WoodProject
     internal class WallInfo
     {
         public Curve Curve { get; set; }
+
+        public Solution Solution { get; set; }
 
         public ElementId TypeId { get; set; }
 
@@ -121,7 +208,7 @@ namespace WoodProject
             try
             {
                 if (!File.Exists(jsonPath))
-                    return new WoodProjectItem ();
+                    return new WoodProjectItem();
 
                 System.Console.WriteLine(jsonPath);
                 string jsonContents = File.ReadAllText(jsonPath);

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Structure;
@@ -145,6 +146,7 @@ namespace WoodProject
                             Curve = Line.CreateBound(
                                 new XYZ(item.Sx / unitFactor.LengthRatio, item.Sy / unitFactor.LengthRatio, 0),
                                 new XYZ(item.Ex / unitFactor.LengthRatio, item.Ey / unitFactor.LengthRatio, 0)),
+                            Solution = item,
                             TypeId = wallTypes.FirstOrDefault(x => x.Name == item.SolutionName)?.Id,
                             WallSymbols = floorItems.Where(x =>
                                 !string.IsNullOrWhiteSpace(x.AssociatedWall) && x.AssociatedWall == item.Id).Select(
@@ -183,7 +185,10 @@ namespace WoodProject
                         floorHeight += levelInfo.Height;
                         foreach (var wallInfo in levelInfo.WallInfos)
                         {
-                            var wall = Wall.Create(newDoc, wallInfo.Curve, wallInfo.TypeId ?? defaultWallTypeId, level.Id, levelInfo.Height, 0, false, false);
+                            var wall = Wall.Create(newDoc, wallInfo.Curve, wallInfo.TypeId ?? defaultWallTypeId,
+                                level.Id, levelInfo.Height, 0, false, false);
+                            UpdateWallParam(wall, wallInfo.Solution);
+
                             if (wallInfo.WallSymbols.Any())
                             {
                                 foreach (var wallSymbol in wallInfo.WallSymbols)
@@ -198,6 +203,44 @@ namespace WoodProject
                 constructTrans.Commit();
             }
         }
+
+        private static void UpdateWallParam(Element element, Solution solution)
+        {
+            foreach (PropertyInfo propertyInfo in solution.GetType().GetProperties())
+            {
+                var propertyAttr = propertyInfo.CustomAttributes.ToList();
+
+                if (!propertyAttr.Any())
+                {
+                    continue;
+                }
+
+                var jsonAttrubute = propertyAttr.FirstOrDefault(x => x.AttributeType.Name == "JsonPropertyAttribute");
+
+                var attrubuteTypeName = jsonAttrubute?.NamedArguments?.FirstOrDefault().TypedValue.Value?.ToString();
+
+                if (attrubuteTypeName == null)
+                {
+                    continue;
+                }
+
+                if (!Constants.ParameterMapping.TryGetValue(attrubuteTypeName, out var parameterName))
+                {
+                    continue;
+                }
+
+                var param = element.LookupParameter(parameterName);
+
+                var paramValue = propertyInfo.GetValue(solution);
+                if (param == null || paramValue == null)
+                {
+                    continue;
+                }
+
+                param.Set(paramValue.ToString());
+            }
+        }
+
         private static Level CreateLevel(Document document, IList<Element> levelElements, double elevation,
             LevelInfo levelInfo)
         {
@@ -262,7 +305,6 @@ namespace WoodProject
                     winType.Activate();
                     doc.Regenerate();
                 }
-                
                 doc.Create.NewFamilyInstance(location, winType, wall, level, StructuralType.NonStructural);
             }
         }
