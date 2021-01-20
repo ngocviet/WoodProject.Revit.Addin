@@ -77,19 +77,19 @@ namespace WoodProject
         public int Floor { get; set; }
 
         [JsonProperty(PropertyName = "Id Panel")]
-        public int? IdPanel { get; set; }
+        public string IdPanel { get; set; }
         
         [JsonProperty(PropertyName = "Peso por unidad de largo")]
         public float? PesoUnidad { get; set; }
 
         [JsonProperty(PropertyName = "Longitud Panel")]
-        public int? Longitud { get; set; }
+        public double? Longitud { get; set; }
 
         [JsonProperty(PropertyName = "Id Mesa")]
-        public int? IdMesa { get; set; }
+        public double? IdMesa { get; set; }
 
         [JsonProperty(PropertyName = "Altura panel")]
-        public int? Altura { get; set; }
+        public double? Altura { get; set; }
 
         [JsonProperty(PropertyName = "Tipo Anclaje 1")]
         public string TipoAnclaje1 { get; set; }
@@ -137,16 +137,16 @@ namespace WoodProject
         public string Borde5 { get; set; }
 
         [JsonProperty(PropertyName = "Clavado Perimetral Lateral")]
-        public int? ClavadoPerimetralLateral { get; set; }
+        public string ClavadoPerimetralLateral { get; set; }
 
         [JsonProperty(PropertyName = "Clavado Interior Lateral")]
-        public int? ClavadoInteriorLateral { get; set; }
+        public string ClavadoInteriorLateral { get; set; }
 
         [JsonProperty(PropertyName = "Clavado Perimetral Gravitacional")]
-        public int? ClavadoPerimetralGravitacional { get; set; }
+        public string ClavadoPerimetralGravitacional { get; set; }
 
         [JsonProperty(PropertyName = "Clavado Interior Gravitacional")]
-        public int? ClavadoInteriorGravitacional { get; set; }
+        public string ClavadoInteriorGravitacional { get; set; }
 
         [JsonProperty(PropertyName = "Grado Estructural")]
         public string GradoEstructural { get; set; }

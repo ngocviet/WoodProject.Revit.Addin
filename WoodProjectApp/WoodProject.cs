@@ -236,8 +236,21 @@ namespace WoodProject
                 {
                     continue;
                 }
+                Type propertyType = propertyInfo.PropertyType;
 
-                param.Set(paramValue.ToString());
+                if (propertyType.FullName != null && propertyType.FullName.Contains("Int32") && int.TryParse(paramValue.ToString(), out var intResult))
+                {
+                    param.Set(intResult);
+                }
+
+                if (propertyType.FullName != null && propertyType.FullName.Contains("Double") && double.TryParse(paramValue.ToString(), out var doubleResult))
+                {
+                    param.Set(doubleResult);
+                }
+                else
+                {
+                    param.Set(paramValue.ToString());
+                }
             }
         }
 
