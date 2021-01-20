@@ -223,13 +223,31 @@ namespace WoodProject
                 {
                     continue;
                 }
-
+                
                 if (!Constants.ParameterMapping.TryGetValue(attrubuteTypeName, out var parameterName))
                 {
                     continue;
                 }
 
                 var param = element.LookupParameter(parameterName);
+
+                // try to lookup with another name
+                if (parameterName == "N° de la Mesa" && param == null)
+                {
+                    param = element.LookupParameter("N° Mesa de armado");
+                }
+
+                // try to lookup with another name
+                if (parameterName == "Piso del Panel" && param == null)
+                {
+                    param = element.LookupParameter("Piso");
+                }
+
+                // try to lookup with another name
+                if (parameterName == "Altura del Panel" && param == null)
+                {
+                    param = element.LookupParameter("Altura Panel");
+                }
 
                 var paramValue = propertyInfo.GetValue(solution);
                 if (param == null || paramValue == null)
@@ -238,12 +256,16 @@ namespace WoodProject
                 }
                 Type propertyType = propertyInfo.PropertyType;
 
-                if (propertyType.FullName != null && propertyType.FullName.Contains("Int32") && int.TryParse(paramValue.ToString(), out var intResult))
+                // these param type dose not match with defined type so that  we have to parse manually until we have another template 
+                if ((attrubuteTypeName.Contains("qPPDD borde") || attrubuteTypeName.Contains("Clavado Perimetral Gravitacional")) && double.TryParse(paramValue.ToString(), out var tempValueResult))
+                {
+                    param.Set(tempValueResult);
+                }
+                else if (propertyType.FullName != null && propertyType.FullName.Contains("Int32") && int.TryParse(paramValue.ToString(), out var intResult))
                 {
                     param.Set(intResult);
                 }
-
-                if (propertyType.FullName != null && propertyType.FullName.Contains("Double") && double.TryParse(paramValue.ToString(), out var doubleResult))
+                else if (propertyType.FullName != null && propertyType.FullName.Contains("Double") && double.TryParse(paramValue.ToString(), out var doubleResult))
                 {
                     param.Set(doubleResult);
                 }
