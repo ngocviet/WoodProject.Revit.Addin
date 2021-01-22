@@ -121,6 +121,21 @@ namespace WoodProject
         [JsonProperty(PropertyName = "Posicion Anclaje 5")]
         public string Posicion5 { get; set; }
 
+        [JsonProperty(PropertyName = "Posicion Segmento 1")]
+        public string PosicionSegmento1 { get; set; }
+
+        [JsonProperty(PropertyName = "Posicion Segmento 2")]
+        public string PosicionSegmento2 { get; set; }
+
+        [JsonProperty(PropertyName = "Posicion Segmento 3")]
+        public string PosicionSegmento3 { get; set; }
+
+        [JsonProperty(PropertyName = "Posicion Segmento 4")]
+        public string PosicionSegmento4 { get; set; }
+
+        [JsonProperty(PropertyName = "Posicion Segmento 5")]
+        public string PosicionSegmento5 { get; set; }
+
         [JsonProperty(PropertyName = "qPPDD borde 1")]
         public string Borde1 { get; set; }
 
@@ -168,6 +183,36 @@ namespace WoodProject
 
         [JsonProperty(PropertyName = "ymin")]
         public double Ymin { get; set; }
+
+        [JsonProperty(PropertyName = "Piso del Panel")]
+        public int Floor { get; set; }
+
+        [JsonProperty(PropertyName = "Id Panel Constructivo")]
+        public string IdPanel { get; set; }
+
+        [JsonProperty(PropertyName = "Ancho del Panel")]
+        public double? Ancho { get; set; }
+
+        [JsonProperty(PropertyName = "Largo del Panel")]
+        public double? Longitud { get; set; }
+
+        [JsonProperty(PropertyName = "N de la Mesa")]
+        public double? IdMesa { get; set; }
+
+        [JsonProperty(PropertyName = "Espesor")]
+        public double? Espesor { get; set; }
+
+        [JsonProperty(PropertyName = "Cantidad de vigas de borde")]
+        public double? CantidadBorde { get; set; }
+
+        [JsonProperty(PropertyName = "Patron de clavado interior")]
+        public string ClavadoInterior { get; set; }
+
+        [JsonProperty(PropertyName = "Patron de clavado perimetral")]
+        public string ClavadoPerimetral { get; set; }
+
+        [JsonProperty(PropertyName = "Grado Estructural")]
+        public string GradoEstructural { get; set; }
     }
 
     internal class WallInfo
@@ -193,6 +238,8 @@ namespace WoodProject
         public ElementId Id { get; set; }
 
         public string Name { get; set; }
+
+        public int Floor { get; set; }
 
         public List<WallInfo> WallInfos { get; set; }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -129,6 +130,7 @@ namespace WoodProject
                 {
                     Id = null,
                     Name = floorItems.Key,
+                    Floor = int.TryParse(floorItems.Key.Replace("Level ", ""), out var floor) ? floor : 1,
                     Elevator = currentElevation,
                     Height = wallHeight,
                     WallInfos = new List<WallInfo>(),
@@ -175,38 +177,52 @@ namespace WoodProject
             using (Transaction constructTrans = new Transaction(newDoc, "Create construct"))
             {
                 constructTrans.Start();
-                double floorHeight = 0;
-                foreach (var levelInfo in levelInfos)
+                try
                 {
-                    var level = CreateLevel(newDoc, levelElements, levelInfo.Elevator, levelInfo);
-                    if (level != null)
+                    double floorHeight = 0;
+                    foreach (var levelInfo in levelInfos)
                     {
-                        CreateFloor(newDoc, level, jsonDeserialized.Areas[0], unitFactor, floorHeight);
-                        floorHeight += levelInfo.Height;
-                        foreach (var wallInfo in levelInfo.WallInfos)
+                        var level = CreateLevel(newDoc, levelElements, levelInfo.Elevator, levelInfo);
+                        if (level != null)
                         {
-                            var wall = Wall.Create(newDoc, wallInfo.Curve, wallInfo.TypeId ?? defaultWallTypeId,
-                                level.Id, levelInfo.Height, 0, false, false);
-                            UpdateWallParam(wall, wallInfo.Solution);
-
-                            if (wallInfo.WallSymbols.Any())
+                            var area = jsonDeserialized.Areas.FirstOrDefault(x => x.Floor == levelInfo.Floor);
+                            if (area != null)
                             {
-                                foreach (var wallSymbol in wallInfo.WallSymbols)
+                                var newFoor = CreateFloor(newDoc, level, area, unitFactor, floorHeight);
+                                floorHeight += levelInfo.Height;
+                                UpdateWallParam(newFoor, area, Constants.AreaParameterMapping);
+                            }
+                            foreach (var wallInfo in levelInfo.WallInfos)
+                            {
+                                var wall = Wall.Create(newDoc, wallInfo.Curve, wallInfo.TypeId ?? defaultWallTypeId,
+                                    level.Id, levelInfo.Height, 0, false, false);
+                                UpdateWallParam(wall, wallInfo.Solution, Constants.WallParameterMapping);
+
+                                if (wallInfo.WallSymbols.Any())
                                 {
-                                    InsertSymBol(newDoc, wallSymbol.StartPoint, wall, level, wallSymbol.Type);
+                                    foreach (var wallSymbol in wallInfo.WallSymbols)
+                                    {
+                                        InsertSymBol(newDoc, wallSymbol.StartPoint, wall, level, wallSymbol.Type);
+                                    }
                                 }
                             }
                         }
                     }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    throw;
                 }
 
                 constructTrans.Commit();
             }
         }
 
-        private static void UpdateWallParam(Element element, Solution solution)
+        private static void UpdateWallParam(Element element, object data,
+            ReadOnlyDictionary<string, string> parameterMapping)
         {
-            foreach (PropertyInfo propertyInfo in solution.GetType().GetProperties())
+            foreach (PropertyInfo propertyInfo in data.GetType().GetProperties())
             {
                 var propertyAttr = propertyInfo.CustomAttributes.ToList();
 
@@ -224,44 +240,21 @@ namespace WoodProject
                     continue;
                 }
                 
-                if (!Constants.ParameterMapping.TryGetValue(attrubuteTypeName, out var parameterName))
+                if (!parameterMapping.TryGetValue(attrubuteTypeName, out var parameterName))
                 {
                     continue;
                 }
 
                 var param = element.LookupParameter(parameterName);
 
-                // try to lookup with another name
-                if (parameterName == "N° de la Mesa" && param == null)
-                {
-                    param = element.LookupParameter("N° Mesa de armado");
-                }
-
-                // try to lookup with another name
-                if (parameterName == "Piso del Panel" && param == null)
-                {
-                    param = element.LookupParameter("Piso");
-                }
-
-                // try to lookup with another name
-                if (parameterName == "Altura del Panel" && param == null)
-                {
-                    param = element.LookupParameter("Altura Panel");
-                }
-
-                var paramValue = propertyInfo.GetValue(solution);
+                var paramValue = propertyInfo.GetValue(data);
                 if (param == null || paramValue == null)
                 {
                     continue;
                 }
                 Type propertyType = propertyInfo.PropertyType;
-
-                // these param type dose not match with defined type so that  we have to parse manually until we have another template 
-                if ((attrubuteTypeName.Contains("qPPDD borde") || attrubuteTypeName.Contains("Clavado Perimetral Gravitacional")) && double.TryParse(paramValue.ToString(), out var tempValueResult))
-                {
-                    param.Set(tempValueResult);
-                }
-                else if (propertyType.FullName != null && propertyType.FullName.Contains("Int32") && int.TryParse(paramValue.ToString(), out var intResult))
+                
+                if (propertyType.FullName != null && propertyType.FullName.Contains("Int32") && int.TryParse(paramValue.ToString(), out var intResult))
                 {
                     param.Set(intResult);
                 }
