@@ -102,7 +102,7 @@ namespace WoodProject
                 
             wallTypeCollector.OfClass(typeof(WallType));
             var wallTypes = wallTypeCollector.ToElements();
-
+            int defaultSillHeight = 40;
             UnitConversionFactors unitFactor = new UnitConversionFactors("cm", "N");
 
             List<LevelInfo> levelInfos = new List<LevelInfo>();
@@ -158,7 +158,7 @@ namespace WoodProject
                                         StartPoint = new XYZ(symbol.Sx / unitFactor.LengthRatio,
                                             symbol.Sy / unitFactor.LengthRatio,
                                             symbol.Type == "window"
-                                                ? currentElevation + wallHeight / 3
+                                                ? currentElevation + (defaultSillHeight / unitFactor.LengthRatio)
                                                 : currentElevation),
                                         Type = symbol.Type
 
