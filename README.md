@@ -25,7 +25,7 @@ This Revit plugin requires **RevitAPI** and **DesignAutomationBridge** reference
 
 ## Building WoodProject.sln
 
-Clone this repository and open `SketchIt.sln` in Visual Studio.
+Clone this repository and open `WoodProject.sln` in Visual Studio.
 
 Right-click on References, then Add Reference and Browse for RevitAPI.dll (by default under _C:\Program Files\Autodesk\Revit 201x_ folder). Then right-click on this RevitAPI reference, go to Properties, then set Copy Local to False.
 
