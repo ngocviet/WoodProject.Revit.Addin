@@ -31,9 +31,9 @@ Right-click on References, then Add Reference and Browse for RevitAPI.dll (by de
 
 Then right-click on the project, go to Manage NuGet Packages..., under Browser you can search for DesignAutomation.Revit and install _Autodesk.Forge.DesignAutomation.Revit_ (choose the appropriate Revit version you need). Then search and install _Newtonsoft.Json_ (which is used to parse input data in JSON format).
 
-Please check Include prerelease while searching for packages. Design Automation for Revit is in beta (as of Jan/2019). 
+Please check Include pre-release while searching for packages. Design Automation for Revit is in beta (as of Jan/2019). 
 
-In the WoodProject C# project, repair the references to `DesignAutomationBridge`, `Newtonsoft JSON framework` and `RevitAPI`.  You can do this by removing and re-adding the references, or by opening the `SketchIt.csproj` for edit and manually updating the reference paths.
+In the WoodProject C# project, repair the references to `DesignAutomationBridge`, `Newtonsoft JSON framework` and `RevitAPI`.  You can do this by removing and re-adding the references, or by opening the `WoodProject.csproj` for edit and manually updating the reference paths.
 
 Build `WoodProject.sln` in `Release` or `Debug` configuration.
 
@@ -42,15 +42,28 @@ Build `WoodProject.sln` in `Release` or `Debug` configuration.
 
 ## Deploy WoodProject
 
-Use Postman collection "Design Automation For Revit Tutorial"
+- Use Postman collection "Design Automation For Revit Tutorial"
+Tutorial at https://forge.autodesk.com/en/docs/design-automation/v3/tutorials/revit/ and https://github.com/Autodesk-Forge/forge-tutorial-postman/tree/master/DA4Revit
 
-Run Task2 - Get an Access Token
+- Fill your postman environment variable (see the important variables not default below)
 
-Run Task4 - Update an Existing AppBundle
+| Variable | Value |
+|----------|----------|
+| client_id | Your Forge client id |
+| client_secret | Your forge client secret  |
+|  dasNickName        |  deodemwoodproject        |
+|  ossInputFileObjectKey        |  sandbox_2019        |
+|  ossOutputFileObjectKey        |  result.rvt        |
+|  appBundleName        |  WoodProjectApp        |
 
-Run Task 4 - Upload the Updated AppBundle (change the file parameter in body to select correct file)
 
-Run Task 4 - Assign an Existing Alias to the Updated AppBundle
+- Run Task2 - Get an Access Token
+
+- Run Task4 - Update an Existing AppBundle
+
+- Run Task 4 - Upload the Updated AppBundle (change the file parameter in body to select correct file)
+
+- Run Task 4 - Assign an Existing Alias to the Updated AppBundle
 
 
 # Further Reading

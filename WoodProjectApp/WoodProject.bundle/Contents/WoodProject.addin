@@ -2,7 +2,7 @@
 <RevitAddIns>
   <AddIn Type="DBApplication">
     <Name>WoodProject</Name>
-    <Assembly>.\WoodProject\WoodProject.dll</Assembly>
+    <Assembly>.\WoodProject.dll</Assembly>
     <AddInId>E539445A-9E38-4EF4-A095-0692D7141958</AddInId>
     <FullClassName>WoodProject.WoodProjectApp</FullClassName>
     <Description>"BIMetriX App"</Description>
