@@ -70,3 +70,4 @@ Tutorial at https://forge.autodesk.com/en/docs/design-automation/v3/tutorials/re
 
 - [My First Revit Plugin](https://knowledge.autodesk.com/support/revit-products/learn-explore/caas/simplecontent/content/my-first-revit-plug-overview.html)
 - [Revit Developer Center](https://www.autodesk.com/developer-network/platform-technologies/revit)
+- [Design Automation For Revit Tutorial](https://forge.autodesk.com/en/docs/design-automation/v3/tutorials/revit)
